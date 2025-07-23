@@ -1,48 +1,65 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <meta charset="utf-8">
-  <title>Cast Test</title>
-  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-  <style>
-    body { text-align: center; padding: 2em; font-family: sans-serif; }
-    button { font-size: 1.5em; margin-top: 1em; }
-  </style>
+    <meta charset="utf-8">
+    <title>Cast Test</title>
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+    <style>
+        body {
+            text-align: center;
+            padding: 2em;
+            font-family: sans-serif;
+        }
+
+        button {
+            font-size: 1.5em;
+            margin-top: 1em;
+        }
+    </style>
 </head>
+
 <body>
-  <h1>🎮 Cast Controller</h1>
-  <google-cast-launcher style="width: 48px; height: 48px;"></google-cast-launcher>
-  <br><br>
-  <button onclick="launchCast()">Transmitir a TV</button>
+    <h1>🎮 Cast Controller</h1>
+    <google-cast-launcher style="width: 48px; height: 48px;"></google-cast-launcher>
+    <br><br>
+    <button onclick="launchCast()">Transmitir a TV</button>
 
-  <script>
-    window.receiverApplicationId = "615B5CB4";
-    const namespace = "urn:x-cast:com.tujuego";
-    let castReady = false;
+    <script>
+        window.receiverApplicationId = "615B5CB4";
+        const namespace = "urn:x-cast:com.tujuego";
+        let castReady = false;
 
-    window.__onGCastApiAvailable = function (isAvailable) {
-      if (isAvailable && window.cast && window.cast.framework) {
-        console.log("✅ Cast API lista");
-        cast.framework.CastContext.getInstance().setOptions({
-          receiverApplicationId: window.receiverApplicationId,
-          autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-        });
-        castReady = true;
-      }
-    };
+        window.__onGCastApiAvailable = function (isAvailable) {
+            if (isAvailable && window.cast && window.cast.framework) {
+                console.log("✅ Cast API lista");
+                cast.framework.CastContext.getInstance().setOptions({
+                    receiverApplicationId: window.receiverApplicationId,
+                    autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+                });
+                castReady = true;
+            }
+        };
 
-    async function launchCast() {
-      if (!castReady) {
-        alert("Cast aún no está listo");
-        return;
-      }
-      try {
-        await cast.framework.CastContext.getInstance().requestSession();
-        console.log("🎯 Sesión iniciada");
-      } catch (e) {
-        console.error("❌ Error al iniciar sesión:", e);
-      }
-    }
-  </script>
+        async function launchCast() {
+            if (!castReady) {
+                alert("Cast aún no está listo");
+                return;
+            }
+            try {
+                cast.framework.CastContext.getInstance().addEventListener(
+                    cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
+                    (event) => {
+                        console.log("🎯 Session state changed:", event.sessionState);
+                    });
+                    
+                await cast.framework.CastContext.getInstance().requestSession();
+                console.log("🎯 Sesión iniciada");
+            } catch (e) {
+                console.error("❌ Error al iniciar sesión:", e);
+            }
+        }
+    </script>
 </body>
+
 </html>
