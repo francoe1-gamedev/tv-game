@@ -3,14 +3,16 @@
 <head>
   <meta charset="utf-8">
   <title>Controller</title>
-  <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <style>
     body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-    button { padding: 1em 2em; font-size: 1.2em; }
+    button { padding: 1em 2em; font-size: 1.2em; margin: 0.5em; }
   </style>
 </head>
 <body>
   <h1>🎮 Controller</h1>
+  <google-cast-launcher style="width: 48px; height: 48px;"></google-cast-launcher>
+  <br><br>
   <button onclick="launchCast()">🎬 Transmitir a TV</button>
   <br><br>
   <button onclick="sendAction('jump')">⬆️ Enviar salto</button>
@@ -20,17 +22,27 @@
   <script>
     const namespace = "urn:x-cast:com.tujuego";
 
-    window['__onGCastApiAvailable'] = function (isAvailable) {
-      if (isAvailable) {
+    // Esto se asegura de que Cast esté listo
+    window.__onGCastApiAvailable = function(isAvailable) {
+      if (isAvailable && window.cast && window.cast.framework) {
+        console.log("Cast API disponible");
         cast.framework.CastContext.getInstance().setOptions({
           receiverApplicationId: "615B5CB4",
           autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
         });
+      } else {
+        console.warn("Cast API no disponible aún");
       }
     };
 
     async function launchCast() {
-      await cast.framework.CastContext.getInstance().requestSession();
+      try {
+        const context = cast.framework.CastContext.getInstance();
+        await context.requestSession();
+        console.log("Sesión iniciada");
+      } catch (e) {
+        console.error("Error al iniciar sesión de cast:", e);
+      }
     }
 
     function sendAction(action) {
@@ -41,6 +53,7 @@
       }
       const message = { action };
       session.sendMessage(namespace, message);
+      console.log("Mensaje enviado:", message);
     }
   </script>
 </body>
