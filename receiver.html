@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Receiver</title>
+  <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #111;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+  <h1>📺 TV Receiver</h1>
+  <div id="log">Esperando comandos...</div>
+
+  <script>
+    const namespace = "urn:x-cast:com.tujuego";
+    const log = document.getElementById("log");
+
+    const context = cast.framework.CastReceiverContext.getInstance();
+    context.addCustomMessageListener(namespace, (event) => {
+      console.log("Mensaje recibido:", event.data);
+      log.textContent = "Último mensaje: " + JSON.stringify(event.data);
+    });
+
+    context.start();
+  </script>
+</body>
+</html>

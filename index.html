@@ -1,57 +1,47 @@
 <!DOCTYPE html>
-<html lang="es">
-
+<html>
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TV Games</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: #00ffea;
-            font-family: 'Press Start 2P', cursive;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        h1 {
-            font-size: 24px;
-            text-align: center;
-            text-transform: uppercase;
-            animation: flicker 2s infinite alternate;
-        }
-
-        @keyframes flicker {
-            0% {
-                opacity: 1;
-                text-shadow: 0 0 5px #00ffea, 0 0 10px #00ffea, 0 0 20px #0ff;
-            }
-
-            50% {
-                opacity: 0.7;
-                text-shadow: 0 0 2px #0ff;
-            }
-
-            100% {
-                opacity: 1;
-                text-shadow: 0 0 10px #00ffea, 0 0 20px #0ff, 0 0 30px #0ff;
-            }
-        }
-    </style>
+  <meta charset="utf-8">
+  <title>Controller</title>
+  <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    button { padding: 1em 2em; font-size: 1.2em; }
+  </style>
 </head>
-
 <body>
-    <div>
-        <h1>Welcome to </h1>
-        <h1 style="font-size: 50px; margin-top: 10px;">TV Games</h1>
-    </div>
-</body>
+  <h1>🎮 Controller</h1>
+  <button onclick="launchCast()">🎬 Transmitir a TV</button>
+  <br><br>
+  <button onclick="sendAction('jump')">⬆️ Enviar salto</button>
+  <button onclick="sendAction('left')">⬅️ Izquierda</button>
+  <button onclick="sendAction('right')">➡️ Derecha</button>
 
+  <script>
+    const namespace = "urn:x-cast:com.tujuego";
+
+    window['__onGCastApiAvailable'] = function (isAvailable) {
+      if (isAvailable) {
+        cast.framework.CastContext.getInstance().setOptions({
+          receiverApplicationId: "615B5CB4",
+          autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+        });
+      }
+    };
+
+    async function launchCast() {
+      await cast.framework.CastContext.getInstance().requestSession();
+    }
+
+    function sendAction(action) {
+      const session = cast.framework.CastContext.getInstance().getCurrentSession();
+      if (!session) {
+        alert("No hay sesión activa de Cast");
+        return;
+      }
+      const message = { action };
+      session.sendMessage(namespace, message);
+    }
+  </script>
+</body>
 </html>
