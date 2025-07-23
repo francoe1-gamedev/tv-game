@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TV Games</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #00ffea;
+            font-family: 'Press Start 2P', cursive;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            text-transform: uppercase;
+            animation: flicker 2s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0% {
+                opacity: 1;
+                text-shadow: 0 0 5px #00ffea, 0 0 10px #00ffea, 0 0 20px #0ff;
+            }
+
+            50% {
+                opacity: 0.7;
+                text-shadow: 0 0 2px #0ff;
+            }
+
+            100% {
+                opacity: 1;
+                text-shadow: 0 0 10px #00ffea, 0 0 20px #0ff, 0 0 30px #0ff;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <h1>Welcome to </h1>
+        <h1 style="font-size: 50px; margin-top: 10px;">TV Games</h1>
+    </div>
+</body>
+
+</html>
