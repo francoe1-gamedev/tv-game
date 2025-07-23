@@ -16,6 +16,7 @@
   <button onclick="launchCast()">Transmitir a TV</button>
 
   <script>
+    window.receiverApplicationId = "615B5CB4";
     const namespace = "urn:x-cast:com.tujuego";
     let castReady = false;
 
@@ -23,7 +24,7 @@
       if (isAvailable && window.cast && window.cast.framework) {
         console.log("✅ Cast API lista");
         cast.framework.CastContext.getInstance().setOptions({
-          receiverApplicationId: "CC1AD845",
+          receiverApplicationId: window.receiverApplicationId,
           autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
         });
         castReady = true;
