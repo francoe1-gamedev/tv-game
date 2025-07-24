@@ -24,8 +24,14 @@
 
 <body>
   <h1>📺 TV Receiver</h1>
-  <h2 id="code"></h2>
-  <canvas id="qr"></canvas>
+  <div>
+    <h2 id="code"></h2>
+    <canvas id="qr" style="flex-grow: 0;" width="200" height="200"></canvas>
+    <br>
+    <iframe src="/dice.html" width="450" height="450" style="overflow: hidden; outline: none; border: none;"></iframe>
+  </div>
+
+
   <ul id="log"></ul>
 
   <script>
@@ -46,11 +52,20 @@
 
     const ably = new Ably.Realtime('2FeVXA.l-xcog:LMmVSofRgR-9fjIRoAGRxmcj5IeC5uY0BRKfiE1A0NE');
     const channel = ably.channels.get(`game-${code}`);
+    const userChannels = [];
 
-    channel.subscribe('input', (msg) => {
-      const { action } = msg.data;
-      console.log(`🎯 [${msg.connectionId}] ${action}`);
-    });
+    channel.subscribe('join', (msg) => {
+      const channelName = `player-${msg.connectionId}`;
+      userChannels[msg.connectionId] = ably.channels.get(channelName);
+
+      userChannels[msg.connectionId].subscribe('input', (msg) => {
+        const { action } = msg.data;
+        console.log(`[${msg.connectionId}] ${action}`);
+      });
+
+      channel.publish('player-join', { channelName });
+      console.log(`Connected player ${msg.connectionId}`);
+    })
 
     function startGame() {
       channel.publish('start', {});

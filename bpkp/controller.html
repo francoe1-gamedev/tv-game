@@ -23,6 +23,8 @@
 <body>
   <h1>🎮 Controller</h1>
   <p id="info"></p>
+  <button onclick="join()">Join</button>
+  <br>
   <button onclick="send('left')">⬅️</button>
   <button onclick="send('right')">➡️</button>
   <button onclick="send('jump')">⬆️</button>
@@ -31,15 +33,24 @@
     const ably = new Ably.Realtime('2FeVXA.l-xcog:LMmVSofRgR-9fjIRoAGRxmcj5IeC5uY0BRKfiE1A0NE');
     const code = new URLSearchParams(window.location.search).get('code');
     const channel = ably.channels.get(`game-${code}`);
+    let userChannel = null;
 
     channel.subscribe('start', () => {
       alert('🎮 Juego iniciado');
     });
 
     function send(action) {
-      channel.publish('input', { action });
+      userChannel.publish('input', { action });
     }
 
+    function join() {
+      channel.publish('join', {});
+    }
+
+    channel.subscribe('player-join', (msg) => {
+      userChannel = ably.channels.get(msg.data.channelName);
+      console.log(`Connected - ${msg.data}`);
+    });
   </script>
 </body>
 
