@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Receiver</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <style>
+    body { background: #111; color: white; font-family: sans-serif; text-align: center; padding-top: 2em; }
+    #qr { margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h1>📺 TV Receiver</h1>
+  <h2 id="code"></h2>
+  <canvas id="qr"></canvas>
+  <ul id="log"></ul>
+
+  <script>
+    const socket = io();
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const code = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+
+    const joinUrl = `${window.location.origin}/controller.html?code=${code}`;
+    document.getElementById('code').textContent = `Código: ${code}`;
+    socket.emit('join', code);
+
+    // Generar el QR
+    const qr = new QRious({
+      element: document.getElementById('qr'),
+      value: joinUrl,
+      size: 200,
+      background: '#fff',
+      foreground: '#000'
+    });
+
+    socket.on('input', ({ player, action }) => {
+      const li = document.createElement('li');
+      li.textContent = `${player}: ${action}`;
+      document.getElementById('log').appendChild(li);
+    });
+  </script>
+</body>
+</html>
