@@ -9,11 +9,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { generateGameCode } from '@/utils/codeGenerator'
 import { useRoute } from 'vue-router'
 import { createConnectionService } from '@/services/ConnectionFactory';
 import type { IConnectionService } from '@/services/ConnectionService';
+import { GameService } from '@/services/GameService'
+import { useGameStore } from '@/store/gameStore'
 import CreateAvatar from './ControllerView/CreateAvatar.vue'
 import SelectGame from './ControllerView/SelectGame.vue'
 import Wait from './ControllerView/Wait.vue'
@@ -22,35 +24,31 @@ const route = useRoute()
 const gameCode = route.query.code?.toString() || 'UNKNOWN'
 const playerId = generateGameCode();
 const currentState = ref('create-avatar')
-const isLeader = ref(false)
+const store = useGameStore()
+const isLeader = computed(() => store.leader?.playerId === playerId)
 
 const messageService: IConnectionService = createConnectionService('controller', gameCode);
-
-messageService.onMessage((msg) => {
-    if (msg.type === 'leader-assigned' && msg.payload.playerId === playerId) {
-        isLeader.value = true;
-    } else if (msg.type === 'joined') {
-        if (isLeader.value) {
-            currentState.value = 'select-game';
-        } else {
-            currentState.value = 'waiting';
-        }
-    }
-});
+const gameService = new GameService(messageService)
 
 onMounted(() => {
-    messageService.connect();
+    gameService.connect()
 });
+
+watch(isLeader, (val) => {
+    if (currentState.value === 'waiting' && val) {
+        currentState.value = 'select-game'
+    }
+})
 
 function createAvatar(avatar: any) {
     currentState.value = 'waiting';
-    const player = { playerId: playerId, avatar };
-    messageService.sendToAll('join', player);
+    const player = { playerId: playerId, avatar, name: avatar.name };
+    gameService.join(player);
 }
 
-function selectGame(game: string) {
+function selectGame(game: any) {
     currentState.value = 'waiting';
-    messageService.sendToAll('game-selected', { playerId, game });
+    gameService.selectGame({ ...game, playerId });
 }
 </script>
 
