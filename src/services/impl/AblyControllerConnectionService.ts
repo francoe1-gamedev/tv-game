@@ -5,14 +5,15 @@ import type { IConnectionService, MessageEnvelope } from '../ConnectionService';
 export class AblyControllerConnectionService implements IConnectionService {
   private client: Realtime;
   private channel: any;
-  private playerId = uuidv4(); // único por cliente
+  private playerId: string; // único por cliente
   private gameCode: string;
 
   private onMessageCallback: (msg: MessageEnvelope) => void = () => {};
 
-  constructor(gameCode: string) {
+  constructor(gameCode: string, playerId?: string) {
     this.client = new Realtime({ key: import.meta.env.VITE_ABLY_API_KEY });
     this.gameCode = gameCode;
+    this.playerId = playerId || uuidv4();
   }
 
   async connect() {

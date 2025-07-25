@@ -8,24 +8,14 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: "GameSelector",
-  data() {
-    return {
-      games: [
-        { id: 1, name: "Trivia", image: "/public/avatars/avatar_1.png" },
-        { id: 2, name: "Pictionary", image: "/public/avatars/avatar_2.png" },
-        { id: 3, name: "Ahorcado", image: "/public/avatars/avatar_3.png" },
-      ],
-    };
-  },
-  methods: {
-    selectGame(game) {
-      this.$emit("confirm", game);
-    },
-  },
-};
+<script setup lang="ts">
+import { availableGames } from '@/games'
+
+const emit = defineEmits(['confirm'])
+const games = availableGames
+function selectGame(game: any) {
+  emit('confirm', game)
+}
 </script>
 
 <style scoped>

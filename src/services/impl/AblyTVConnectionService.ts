@@ -24,10 +24,14 @@ export class AblyTVConnectionService implements IConnectionService {
         console.log('[ConnectionService] Message received:', data);
 
         if (data.type === 'JOIN' && data.playerId) {
+          const isReconnect = this.playerList.has(data.playerId);
           console.log('[ConnectionService] Player joined:', data.playerId);
           this.playerList.add(data.playerId);
           // Responder al jugador
           this.sendToPlayer(data.playerId, 'JOIN_ACK', { playerId: data.playerId });
+          if (isReconnect) {
+            this.onMessageCallback?.({ type: 'PLAYER_RECONNECT', payload: { playerId: data.playerId } });
+          }
         }
 
         if (data.forPlayerId && data.forPlayerId !== this.myPlayerId) {
