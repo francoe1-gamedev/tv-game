@@ -14,7 +14,8 @@
         </div>
 
         <div class="mt-8">
-            <GameShow :selectedGame="selectedGame" />
+            <TicTacToeBoard v-if="selectedGame?.id === TicTacToeDef.id" :service="ticTacToeService" readonly />
+            <GameShow v-else :selectedGame="selectedGame" />
         </div>
 
         <div v-if="leader" class="mt-8">
@@ -32,6 +33,9 @@ import type { IConnectionService } from '@/services/ConnectionService';
 import { GameService } from '@/services/GameService'
 import { useGameStore } from '@/store/gameStore'
 import GameShow from './ReceiverView/GameShow.vue';
+import { TicTacToeService } from '@/games/TicTacToe/TicTacToeService'
+import TicTacToeBoard from '@/games/TicTacToe/TicTacToeBoard.vue'
+import { GameDefinition as TicTacToeDef } from '@/games/TicTacToe/GameDefinition'
 
 const gameCode = ref<string>(generateGameCode());
 const qrCanvas = ref<HTMLCanvasElement | null>(null);
@@ -42,6 +46,7 @@ const leader = computed(() => store.leader)
 
 const messageService: IConnectionService = createConnectionService('tv', gameCode.value);
 const gameService = new GameService(messageService)
+const ticTacToeService = new TicTacToeService(messageService, true)
 
 onMounted(() => {
   if (qrCanvas.value) {
@@ -49,6 +54,7 @@ onMounted(() => {
   }
 
   gameService.connect()
+  ticTacToeService.connect()
 });
 </script>
 
