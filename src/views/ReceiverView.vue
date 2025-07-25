@@ -24,35 +24,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { generateGameCode } from '@/utils/codeGenerator'
 import { createQR } from '@/utils/qrGenerator'
 import { createConnectionService } from '@/services/ConnectionFactory';
 import type { IConnectionService } from '@/services/ConnectionService';
+import { GameService } from '@/services/GameService'
+import { useGameStore } from '@/store/gameStore'
 import GameShow from './ReceiverView/GameShow.vue';
 
 const gameCode = ref<string>(generateGameCode());
 const qrCanvas = ref<HTMLCanvasElement | null>(null);
-const players = ref<any[]>([]);
-const selectedGame = ref<any | null>(null);
-const leader = ref<any | null>(null);
+const store = useGameStore()
+const players = computed(() => store.players)
+const selectedGame = computed(() => store.selectedGame)
+const leader = computed(() => store.leader)
 
 const messageService: IConnectionService = createConnectionService('tv', gameCode.value);
-
-messageService.onMessage((msg) => {
-  if (msg.type === 'join') {
-    players.value.push(msg.payload);
-  } else if (msg.type === 'game-selected') {
-    selectedGame.value = msg.payload;
-  }
-});
+const gameService = new GameService(messageService)
 
 onMounted(() => {
   if (qrCanvas.value) {
     createQR(`${window.location.origin}/controller?code=${gameCode.value}`, qrCanvas.value);
   }
 
-  messageService.connect();
+  gameService.connect()
 });
 </script>
 
