@@ -3,7 +3,7 @@
         <h1 class="text-3xl font-bold mb-4">Código de la partida:</h1>
         <div class="text-6xl font-mono mb-6">{{ gameCode }}</div>
 
-        <canvas ref="qrCanvas" />
+        <canvas ref="qrCanvas"></canvas>
 
         <div class="mt-8">
             <h2 class="text-xl font-semibold">Jugadores conectados:</h2>
@@ -12,37 +12,48 @@
                 <p class="player-name">{{ player.avatar.name }}</p>
             </div>
         </div>
+
+        <div class="mt-8">
+            <GameShow :selectedGame="selectedGame" />
+        </div>
+
+        <div v-if="leader" class="mt-8">
+            <h2 class="text-xl font-semibold">Líder: {{ leader.avatar.name }}</h2>
+        </div>
     </div>
 </template>
 
-<script setup>
-import { ref, onMounted } from 'vue'
-import { generateGameCode } from '@/utils/codeGenerator.js'
-import { createQR } from '@/utils/qrGenerator.js'
-import { useAblyChannel } from '@/ably/useAblyChannel.js'
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { generateGameCode } from '@/utils/codeGenerator'
+import { createQR } from '@/utils/qrGenerator'
+import { createConnectionService } from '@/services/ConnectionFactory';
+import type { IConnectionService } from '@/services/ConnectionService';
+import GameShow from './ReceiverView/GameShow.vue';
 
-const gameCode = generateGameCode()
-const qrCanvas = ref(null)
-const players = ref([])
+const gameCode = ref<string>(generateGameCode());
+const qrCanvas = ref<HTMLCanvasElement | null>(null);
+const players = ref<any[]>([]);
+const selectedGame = ref<any | null>(null);
+const leader = ref<any | null>(null);
 
-const gameAbly = useAblyChannel(`game-${gameCode}`)
+const messageService: IConnectionService = createConnectionService('tv', gameCode.value);
 
-gameAbly.subscribe('join', (msg) => {
-    var player = {
-        connectionId: msg.connectionId,
-        ...msg.data,
-        channel: useAblyChannel(`player-${msg.data.playerId}`)
-    };
-
-    players.value.push(player)
-    player.channel.publish('joined', {})
-})
+messageService.onMessage((msg) => {
+  if (msg.type === 'join') {
+    players.value.push(msg.payload);
+  } else if (msg.type === 'game-selected') {
+    selectedGame.value = msg.payload;
+  }
+});
 
 onMounted(() => {
-    if (qrCanvas.value) {
-        createQR(`${window.location.origin}/controller?code=${gameCode}`, qrCanvas.value)
-    }
-})
+  if (qrCanvas.value) {
+    createQR(`${window.location.origin}/controller?code=${gameCode.value}`, qrCanvas.value);
+  }
+
+  messageService.connect();
+});
 </script>
 
 <style scoped>

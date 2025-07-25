@@ -12,12 +12,12 @@
     <div class="avatar-grid">
       <div
         v-for="avatar in avatars"
-        :key="avatar"
+        :key="avatar.id"
         class="avatar-option"
-        :class="{ selected: avatar === selectedAvatar }"
+        :class="{ selected: avatar.id === selectedAvatar?.id }"
         @click="selectedAvatar = avatar"
       >
-        <img :src="`/avatars/${avatar}.png`" :alt="avatar" />
+        <img :src="avatar.image" :alt="avatar.name" />
       </div>
     </div>
 
@@ -29,12 +29,12 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import avatars from '@/data/avatars.json'
 
 const emit = defineEmits(['confirm'])
 
 const name = ref('')
 const selectedAvatar = ref(null)
-const avatars = ['avatar_1', 'avatar_2', 'avatar_3', 'avatar_4', 'avatar_5', 'avatar_6', 'avatar_7', 'avatar_8']
 
 const canConfirm = computed(() => name.value.trim() !== '' && selectedAvatar.value)
 
