@@ -2,13 +2,14 @@ import { Realtime } from 'ably';
 import type { IConnectionService, MessageEnvelope } from '../ConnectionService';
 
 export class AblyTVConnectionService implements IConnectionService {
-  private client: Realtime;
-  private channel: any;
-  private playerList: Set<string> = new Set();
-  private gameCode: string;
-  private myPlayerId = 'tv';
+  private client: Realtime
+  private channel: any
+  private playerList: Set<string> = new Set()
+  private gameCode: string
+  private myPlayerId = 'tv'
 
-  private onMessageCallback: (msg: MessageEnvelope) => void = () => {};
+  private isConnected = false
+  private onMessageCallbacks: Array<(msg: MessageEnvelope) => void> = []
 
   constructor(gameCode: string) {
     this.client = new Realtime({ key: import.meta.env.VITE_ABLY_API_KEY });
@@ -16,12 +17,14 @@ export class AblyTVConnectionService implements IConnectionService {
   }
 
   async connect() {
-    console.log('[ConnectionService] Connecting to channel:', `game-${this.gameCode}`);
+    if (this.isConnected) return
+
+    console.log('[ConnectionService] Connecting to channel:', `game-${this.gameCode}`)
     return new Promise<void>((resolve) => {
-      this.channel = this.client.channels.get(`game-${this.gameCode}`);
+      this.channel = this.client.channels.get(`game-${this.gameCode}`)
       this.channel.subscribe((message: any) => {
-        const data: MessageEnvelope = message.data;
-        console.log('[ConnectionService] Message received:', data);
+        const data: MessageEnvelope = message.data
+        console.log('[ConnectionService] Message received:', data)
 
         if (data.type === 'JOIN' && data.playerId) {
           const isReconnect = this.playerList.has(data.playerId);
@@ -30,7 +33,7 @@ export class AblyTVConnectionService implements IConnectionService {
           // Responder al jugador
           this.sendToPlayer(data.playerId, 'JOIN_ACK', { playerId: data.playerId });
           if (isReconnect) {
-            this.onMessageCallback?.({ type: 'PLAYER_RECONNECT', payload: { playerId: data.playerId } });
+            for (const cb of this.onMessageCallbacks) cb({ type: 'PLAYER_RECONNECT', payload: { playerId: data.playerId } })
           }
         }
 
@@ -39,8 +42,9 @@ export class AblyTVConnectionService implements IConnectionService {
           return;
         }
 
-        this.onMessageCallback?.(data);
+        for (const cb of this.onMessageCallbacks) cb(data)
       });
+      this.isConnected = true
       resolve();
     });
   }
@@ -49,6 +53,7 @@ export class AblyTVConnectionService implements IConnectionService {
     console.log('[ConnectionService] Disconnecting from channel:', `game-${this.gameCode}`);
     this.channel?.detach();
     this.client?.close();
+    this.isConnected = false
   }
 
   sendToAll<T>(type: string, payload: T) {
@@ -68,8 +73,8 @@ export class AblyTVConnectionService implements IConnectionService {
   }
 
   onMessage(callback: (msg: MessageEnvelope) => void) {
-    console.log('[ConnectionService] Setting onMessage callback');
-    this.onMessageCallback = callback;
+    console.log('[ConnectionService] Adding onMessage listener');
+    this.onMessageCallbacks.push(callback)
   }
 
   getMyPlayerId() {

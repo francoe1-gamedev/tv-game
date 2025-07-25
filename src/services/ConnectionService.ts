@@ -6,12 +6,16 @@ export type MessageEnvelope<T = any> = {
 };
 
 export interface IConnectionService {
-  connect(): Promise<void>;
-  disconnect(): void;
+  connect(): Promise<void>
+  disconnect(): void
 
-  sendToAll<T>(type: string, payload: T): void;
-  sendToPlayer<T>(playerId: string, type: string, payload: T): void;
+  sendToAll<T>(type: string, payload: T): void
+  sendToPlayer<T>(playerId: string, type: string, payload: T): void
 
-  onMessage(callback: (msg: MessageEnvelope) => void): void;
-  getMyPlayerId(): string;
+  /**
+   * Register a callback to be invoked whenever a message is received. Multiple
+   * listeners can be registered.
+   */
+  onMessage(callback: (msg: MessageEnvelope) => void): void
+  getMyPlayerId(): string
 }

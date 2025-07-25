@@ -3,12 +3,13 @@ import { v4 as uuidv4 } from 'uuid';
 import type { IConnectionService, MessageEnvelope } from '../ConnectionService';
 
 export class AblyControllerConnectionService implements IConnectionService {
-  private client: Realtime;
-  private channel: any;
-  private playerId: string; // único por cliente
-  private gameCode: string;
+  private client: Realtime
+  private channel: any
+  private playerId: string // único por cliente
+  private gameCode: string
 
-  private onMessageCallback: (msg: MessageEnvelope) => void = () => {};
+  private isConnected = false
+  private onMessageCallbacks: Array<(msg: MessageEnvelope) => void> = []
 
   constructor(gameCode: string, playerId?: string) {
     this.client = new Realtime({ key: import.meta.env.VITE_ABLY_API_KEY });
@@ -17,36 +18,40 @@ export class AblyControllerConnectionService implements IConnectionService {
   }
 
   async connect() {
-    console.log('[ConnectionService] Connecting to channel:', `game-${this.gameCode}`);
+    if (this.isConnected) return
+
+    console.log('[ConnectionService] Connecting to channel:', `game-${this.gameCode}`)
     return new Promise<void>((resolve) => {
-      this.channel = this.client.channels.get(`game-${this.gameCode}`);
+      this.channel = this.client.channels.get(`game-${this.gameCode}`)
       this.channel.subscribe((message: any) => {
-        const data: MessageEnvelope = message.data;
-        console.log('[ConnectionService] Message received:', data);
+        const data: MessageEnvelope = message.data
+        console.log('[ConnectionService] Message received:', data)
 
         if (data.forPlayerId && data.forPlayerId !== this.playerId) {
-          console.log('[ConnectionService] Message ignored for playerId:', data.forPlayerId);
-          return;
+          console.log('[ConnectionService] Message ignored for playerId:', data.forPlayerId)
+          return
         }
 
-        this.onMessageCallback?.(data);
-      });
+        for (const cb of this.onMessageCallbacks) cb(data)
+      })
 
-      console.log('[ConnectionService] Sending JOIN message to TV');
+      console.log('[ConnectionService] Sending JOIN message to TV')
       this.channel.publish('message', {
         type: 'JOIN',
         payload: {},
         playerId: this.playerId,
-      });
+      })
 
-      resolve();
-    });
+      this.isConnected = true
+      resolve()
+    })
   }
 
   disconnect() {
     console.log('[ConnectionService] Disconnecting from channel:', `game-${this.gameCode}`);
     this.channel?.detach();
     this.client?.close();
+    this.isConnected = false
   }
 
   sendToAll<T>(type: string, payload: T) {
@@ -71,8 +76,8 @@ export class AblyControllerConnectionService implements IConnectionService {
   }
 
   onMessage(callback: (msg: MessageEnvelope) => void) {
-    console.log('[ConnectionService] Setting onMessage callback');
-    this.onMessageCallback = callback;
+    console.log('[ConnectionService] Adding onMessage listener');
+    this.onMessageCallbacks.push(callback)
   }
 
   getMyPlayerId() {
